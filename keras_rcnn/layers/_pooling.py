@@ -132,7 +132,7 @@ class RegionOfInterestAlignPyramid(tensorflow.keras.layers.Layer):
                 tensorflow.keras.backend.equal(roi_level, level)
             )
 
-            level_boxes = tensorflow.keras.backend.tf.gather_nd(
+            level_boxes = tensorflow.gather_nd(
                 tensorflow.keras.backend.squeeze(boxes, axis=0), ix
             )
 
@@ -148,10 +148,8 @@ class RegionOfInterestAlignPyramid(tensorflow.keras.layers.Layer):
         pooled = tensorflow.keras.backend.concatenate(pooled, axis=1)
         box_to_level = tensorflow.keras.backend.concatenate(box_to_level, axis=0)
 
-        box_range = tensorflow.keras.backend.expand_dims(
-            tensorflow.keras.backend.tf.range(
-                tensorflow.keras.backend.shape(box_to_level)[0]
-            ),
+        box_range = tensorflow.expand_dims(
+            tensorflow.range(tensorflow.keras.backend.shape(box_to_level)[0]),
             1,
         )
         box_to_level_int = tensorflow.keras.backend.cast(
@@ -163,7 +161,7 @@ class RegionOfInterestAlignPyramid(tensorflow.keras.layers.Layer):
 
         pooled = tensorflow.keras.backend.squeeze(pooled, axis=0)
         sorting_tensor = box_to_level[:, 0] * 100000 + box_to_level[:, 1]
-        ix = tensorflow.keras.backend.tf.nn.top_k(
+        ix = tensorflow.nn.top_k(
             sorting_tensor, k=tensorflow.keras.backend.shape(box_to_level)[0]
         ).indices[::-1]
 

@@ -9,11 +9,11 @@ function in order to test the autonomy of the gallery
 stacking multiple images.
 """
 
-import keras
-
 import keras_rcnn.datasets.shape
 import keras_rcnn.models
 import keras_rcnn.preprocessing
+
+import tensorflow
 
 
 def main():
@@ -33,7 +33,7 @@ def main():
         dictionary=test_dictionary, categories=categories, target_size=(224, 224)
     )
 
-    keras.backend.set_learning_phase(1)
+    tensorflow.keras.backend.set_learning_phase(1)
 
     model = keras_rcnn.models.RCNN(
         categories=["circle", "rectangle", "triangle"],
@@ -41,9 +41,11 @@ def main():
         input_shape=(224, 224, 3),
     )
 
-    optimizer = keras.optimizers.Adam()
+    optimizer = tensorflow.keras.optimizers.Adam()
 
-    model.compile(optimizer,)
+    model.compile(
+        optimizer,
+    )
 
     model.fit_generator(epochs=1, generator=generator, validation_data=validation_data)
 

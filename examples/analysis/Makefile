@@ -4,7 +4,7 @@ PIPENV ?= $(shell which pipenv)
 PIP ?= $(shell which pip)
 LOCAL_IMAGE ?= bco
 IMAGE_URI ?= travisbyrum/bco-learner
-TAG ?= latest
+TAG ?= classifier
 
 all: clean clean-pyc install
 
@@ -47,3 +47,11 @@ run:
 		--input malaria_phenotypes
 
 .PHONY: run
+
+validate:
+	$(DOCKER) run \
+		-v `pwd`/validation.py:/opt/bco/validation.py \
+		-v `pwd`/data:/opt/bco/data \
+		$(LOCAL_IMAGE):$(TAG) validate --output-image data/output.png
+
+.PHONY: validate

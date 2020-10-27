@@ -8,13 +8,23 @@ Created October 20, 2020
 
 import argparse
 import json
+import math
 import sys
 from os import path
 
-import keras
 import keras_rcnn.datasets as ds
+import numpy
 from keras_rcnn.models import RCNN
 from keras_rcnn.preprocessing import ObjectDetectionGenerator
+from tensorflow.keras import backend
+from tensorflow.keras.callbacks import LearningRateScheduler
+from tensorflow.keras.optimizers import Adam
+
+
+def schedule(epoch_index):
+    """Schedule learning rate."""
+
+    return 0.1 * numpy.power(0.5, numpy.floor((1 + epoch_index) / 1.0))
 
 
 def write_json(filename: str, data: dict):
@@ -35,17 +45,40 @@ def read_json(filename: str):
     return data
 
 
+def write_model(directory: str, model: Any, history):
+    """Write model and training history to file."""
+
+    model_json = model.to_json()
+
+    with open(os.path.join(directory, "model.json"), "w") as json_file:
+        json_file.write(model_json)
+
+    model.save_weights(os.path.join(directory, "model.h5"))
+
+    with open(os.path.join(directory, "history.json"), "w") as f:
+        json.dump(history.history, f)
+
+
 def main():
     """Entrypoint for training execution."""
 
     parser = argparse.ArgumentParser(description="Train image detection model")
-    parser.add_argument("--input", type=str, help="Input image dataset")
+    parser.add_argument("--input", type=str, help="Input image dataset", default="malaria_phenotypes")
     parser.add_argument("--target", type=int, help="Target image size", default=224)
     parser.add_argument(
         "--epochs", type=int, help="Number of training epochs", default=1
     )
     parser.add_argument(
         "--learning-rate", type=float, help="Model learning rate", default=0.1
+    )
+    parser.add_argument(
+        "--training-path",
+        type=str,
+        help="Path to training json file",
+        default="./data/training.json",
+    )
+    parser.add_argument(
+        "--data-dir", type=str, help="Data directory for model output", default="data"
     )
     parser.add_argument(
         "--training-path",
@@ -71,8 +104,8 @@ def main():
         test_dictionary = read_json(args.test_path)
     except FileNotFoundError:
         training_dictionary, test_dictionary = ds.load_data(args.input)
-        write_json(TRAINING_FILE, training_dictionary)
-        write_json(TEST_FILE, test_dictionary)
+        write_json(args.training_path, training_dictionary)
+        write_json(args.test_path, test_dictionary)
 
     categories = {
         "red blood cell": 1,
@@ -98,22 +131,27 @@ def main():
         target_size=(args.target, args.target),
     )
 
-    keras.backend.set_learning_phase(1)
+    backend.set_learning_phase(1)
 
     model = RCNN(
         categories=categories.keys(),
         dense_units=512,
-        input_shape=(args.target, args.target, 3),
+        input_shape=(args.target, args.target),
     )
 
-    # optimizer = keras.optimizers.Adam(args.learning_rate)
-    # model.compile(optimizer)
+    optimizer = Adam(args.learning_rate)
+    model.compile(optimizer)
 
-    # # model.fit_generator(
-    # #     epochs=args.epoch,
-    # #     generator=generator,
-    # #     validation_data=validation_data
-    # # )
+    history = model.fit_generator(
+        epochs=args.epochs,
+        generator=generator,
+        validation_data=validation_data,
+        callbacks=[LearningRateScheduler(schedule)],
+    )
+
+    write_model(args.data_dir, model, history)
+
+    return model.summary()
 
 
 if __name__ == "__main__":
