@@ -63,7 +63,9 @@ def main():
     """Entrypoint for training execution."""
 
     parser = argparse.ArgumentParser(description="Train image detection model")
-    parser.add_argument("--input", type=str, help="Input image dataset", default="malaria_phenotypes")
+    parser.add_argument(
+        "--input", type=str, help="Input image dataset", default="malaria_phenotypes"
+    )
     parser.add_argument("--target", type=int, help="Target image size", default=224)
     parser.add_argument(
         "--epochs", type=int, help="Number of training epochs", default=1
@@ -72,40 +74,12 @@ def main():
         "--learning-rate", type=float, help="Model learning rate", default=0.1
     )
     parser.add_argument(
-        "--training-path",
-        type=str,
-        help="Path to training json file",
-        default="./data/training.json",
-    )
-    parser.add_argument(
         "--data-dir", type=str, help="Data directory for model output", default="data"
-    )
-    parser.add_argument(
-        "--training-path",
-        type=str,
-        help="Path to training json file",
-        default="./data/training.json",
-    )
-    parser.add_argument(
-        "--test-path",
-        type=str,
-        help="Path to test json file",
-        default="./data/test.json",
     )
 
     args = parser.parse_args()
 
-    if len(sys.argv) < 2:
-        parser.print_usage()
-        sys.exit(1)
-
-    try:
-        training_dictionary = read_json(args.training_path)
-        test_dictionary = read_json(args.test_path)
-    except FileNotFoundError:
-        training_dictionary, test_dictionary = ds.load_data(args.input)
-        write_json(args.training_path, training_dictionary)
-        write_json(args.test_path, test_dictionary)
+    training_dictionary, test_dictionary = ds.load_data(args.input)
 
     categories = {
         "red blood cell": 1,
