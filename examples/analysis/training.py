@@ -17,10 +17,6 @@ from keras_rcnn.models import RCNN
 from keras_rcnn.preprocessing import ObjectDetectionGenerator
 
 
-TRAINING_FILE = "./data/training.json"
-TEST_FILE = "./data/test.json"
-
-
 def write_json(filename: str, data: dict):
     """Write json to file."""
 
@@ -42,27 +38,26 @@ def read_json(filename: str):
 def main():
     """Entrypoint for training execution."""
 
-    parser = argparse.ArgumentParser(
-        description="Train image detection model"
-    )
+    parser = argparse.ArgumentParser(description="Train image detection model")
     parser.add_argument("--input", type=str, help="Input image dataset")
+    parser.add_argument("--target", type=int, help="Target image size", default=224)
     parser.add_argument(
-        "--target",
-        type=int,
-        help="Target image size",
-        default=224
+        "--epochs", type=int, help="Number of training epochs", default=1
     )
     parser.add_argument(
-        "--epochs",
-        type=int,
-        help="Number of training epochs",
-        default=1
+        "--learning-rate", type=float, help="Model learning rate", default=0.1
     )
     parser.add_argument(
-        "--learning-rate",
-        type=float,
-        help="Model learning rate",
-        default=.1
+        "--training-path",
+        type=str,
+        help="Path to training json file",
+        default="./data/training.json",
+    )
+    parser.add_argument(
+        "--test-path",
+        type=str,
+        help="Path to test json file",
+        default="./data/test.json",
     )
 
     args = parser.parse_args()
@@ -72,8 +67,8 @@ def main():
         sys.exit(1)
 
     try:
-        training_dictionary = read_json(TRAINING_FILE)
-        test_dictionary = read_json(TEST_FILE)
+        training_dictionary = read_json(args.training_path)
+        test_dictionary = read_json(args.test_path)
     except FileNotFoundError:
         training_dictionary, test_dictionary = ds.load_data(args.input)
         write_json(TRAINING_FILE, training_dictionary)
@@ -93,20 +88,14 @@ def main():
     generator = generator.flow_from_dictionary(
         dictionary=training_dictionary,
         categories=categories,
-        target_size=(
-            args.target,
-            args.target
-        )
+        target_size=(args.target, args.target),
     )
 
     validation_data = ObjectDetectionGenerator()
     validation_data = validation_data.flow_from_dictionary(
         dictionary=test_dictionary,
         categories=categories,
-        target_size=(
-            args.target,
-            args.target
-        )
+        target_size=(args.target, args.target),
     )
 
     keras.backend.set_learning_phase(1)
@@ -117,7 +106,7 @@ def main():
         input_shape=(args.target, args.target, 3),
     )
 
-    #optimizer = keras.optimizers.Adam(args.learning_rate)
+    # optimizer = keras.optimizers.Adam(args.learning_rate)
     # model.compile(optimizer)
 
     # # model.fit_generator(
@@ -127,5 +116,5 @@ def main():
     # # )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

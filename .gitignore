@@ -51,3 +51,4 @@ sdist/
 target/
 var/
 venv/
+.vscode/
