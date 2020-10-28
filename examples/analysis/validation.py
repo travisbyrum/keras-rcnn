@@ -58,7 +58,7 @@ def main():
         "--epochs", type=int, help="Number of training epochs", default=1
     )
     parser.add_argument(
-        "--output-image", type=str, help="Output image file", default="output.png"
+        "--output-image", type=str, help="Output image file", default="data/output.png"
     )
 
     args = parser.parse_args()
